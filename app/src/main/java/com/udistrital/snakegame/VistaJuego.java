@@ -4,12 +4,15 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
-import android.graphics.Color;
+
+import android.os.Handler;
 import android.util.AttributeSet;
+import android.view.MotionEvent;
 import android.view.View;
 import androidx.annotation.Nullable;
 
 import java.util.ArrayList;
+
 
 import static com.udistrital.snakegame.Constantes.SCREEN_HEIGHT;
 import static com.udistrital.snakegame.Constantes.SCREEN_WIDTH;
@@ -23,7 +26,11 @@ public class VistaJuego extends View {
     private int weigth = 12;
     private ArrayList<Pasto> arrayPasto = new ArrayList<>();
     private Culebrita culebrita;
-
+    private boolean move = false;
+    private float movimientoX;
+    private float movimientoY;
+    private Handler handler;
+    private Runnable runnable;
     public VistaJuego(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
         this.bitMapGrass = BitmapFactory.decodeResource(this.getResources(), R.drawable.grass);
@@ -48,6 +55,53 @@ public class VistaJuego extends View {
         }
 
         this.culebrita = new Culebrita(bitmapSnake, this.arrayPasto.get(126).getX(), this.arrayPasto.get(126).getY(), 4);
+        this.handler = new Handler();
+        this.runnable = new Runnable() {
+            @Override
+            public void run() {
+                invalidate();
+            }
+        };
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        int a = event.getActionMasked();
+        switch (a){
+            case MotionEvent.ACTION_MOVE:{
+                if(move == false){
+                    movimientoX = event.getX();
+                    movimientoY = event.getY();
+                    move = true;
+                }else {
+                    if(movimientoX -  event.getX() > 100 *  SCREEN_WIDTH/ 1000 && !culebrita.isDerecha()){
+                        movimientoX = event.getX();
+                        movimientoY = event.getY();
+                        culebrita.setIzquierda(true);
+                    }else if(event.getX()-movimientoX    > 100 *  SCREEN_WIDTH/ 1000 && !culebrita.isIzquierda()){
+                        movimientoX = event.getX();
+                        movimientoY = event.getY();
+                        culebrita.setDerecha(true);
+                    }else if(movimientoY -  event.getY() > 100 *  SCREEN_WIDTH/ 1000 && !culebrita.isAbajo()){
+                        movimientoX = event.getX();
+                        movimientoY = event.getY();
+                        culebrita.setArriba(true);
+                    }else if(event.getY() - movimientoY   > 100 *  SCREEN_WIDTH/ 1000 && !culebrita.isArriba()){
+                        movimientoX = event.getX();
+                        movimientoY = event.getY();
+                        culebrita.setAbajo(true);
+                    }
+                }
+                break;
+            }
+            case MotionEvent.ACTION_UP:{
+                movimientoX =0;
+                movimientoY =0;
+                move = false;
+                break;
+            }
+        }
+        return true;
     }
 
     @Override
@@ -58,6 +112,8 @@ public class VistaJuego extends View {
                 this.arrayPasto) {
             canvas.drawBitmap(pastito.getBitmap(), pastito.getX(), pastito.getY(), null);
         }
+        culebrita.update();
         culebrita.draw(canvas);
+        handler.postDelayed(runnable, 100);
     }
 }

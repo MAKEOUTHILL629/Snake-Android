@@ -6,6 +6,10 @@ import android.graphics.Canvas;
 import java.util.ArrayList;
 
 public class Culebrita {
+    private boolean derecha;
+    private boolean arriba;
+    private boolean izquierda;
+    private boolean abajo;
     private Bitmap bitmap[];
     private int x;
     private int y;
@@ -40,6 +44,73 @@ public class Culebrita {
         }
         this.partesCulebra.add(new ParteCulebra(this.bitmap[11], this.partesCulebra.get(length - 2).getX() - VistaJuego.tamanioMap, y));
 
+        setDerecha(true);
+    }
+
+    public void update(){
+        for(int i = length-1; i > 0; i-- ){
+            this.partesCulebra.get(i).setX(this.partesCulebra.get(i-1).getX());
+            this.partesCulebra.get(i).setY(this.partesCulebra.get(i-1).getY());
+        }
+
+        if(derecha){
+            this.partesCulebra.get(0).setX(this.partesCulebra.get(0).getX() + VistaJuego.tamanioMap);
+            this.partesCulebra.get(0).setBitmap(this.bitmap[4]);
+        }else if(izquierda){
+            this.partesCulebra.get(0).setX(this.partesCulebra.get(0).getX() - VistaJuego.tamanioMap);
+            this.partesCulebra.get(0).setBitmap(this.bitmap[3]);
+        }else if(arriba){
+            this.partesCulebra.get(0).setY(this.partesCulebra.get(0).getY() - VistaJuego.tamanioMap);
+            this.partesCulebra.get(0).setBitmap(this.bitmap[1]);
+        }else if(abajo){
+            this.partesCulebra.get(0).setY(this.partesCulebra.get(0).getY() + VistaJuego.tamanioMap);
+            this.partesCulebra.get(0).setBitmap(this.bitmap[2]);
+        }
+
+        for(int i =1 ; i< length-1; i++){
+            if(this.partesCulebra.get(i).getRectLeft().intersect(this.partesCulebra.get(i+1).getRectBody()) &&
+               this.partesCulebra.get(i).getRectBottom().intersect(this.partesCulebra.get(i-1).getRectBody()) ||
+               this.partesCulebra.get(i).getRectLeft().intersect(this.partesCulebra.get(i-1).getRectBody()) &&
+                       this.partesCulebra.get(i).getRectBottom().intersect(this.partesCulebra.get(i + 1).getRectBody())){
+                this.partesCulebra.get(i).setBitmap(this.bitmap[10]);
+            }else if(this.partesCulebra.get(i).getRectRight().intersect(this.partesCulebra.get(i+1).getRectBody()) &&
+                    this.partesCulebra.get(i).getRectBottom().intersect(this.partesCulebra.get(i-1).getRectBody()) ||
+                    this.partesCulebra.get(i).getRectRight().intersect(this.partesCulebra.get(i-1).getRectBody()) &&
+                            this.partesCulebra.get(i).getRectBottom().intersect(this.partesCulebra.get(i + 1).getRectBody())){
+                this.partesCulebra.get(i).setBitmap(this.bitmap[9]);
+            }else if(this.partesCulebra.get(i).getRectLeft().intersect(this.partesCulebra.get(i+1).getRectBody()) &&
+                    this.partesCulebra.get(i).getRectTop().intersect(this.partesCulebra.get(i-1).getRectBody()) ||
+                    this.partesCulebra.get(i).getRectLeft().intersect(this.partesCulebra.get(i-1).getRectBody()) &&
+                    this.partesCulebra.get(i).getRectTop().intersect(this.partesCulebra.get(i + 1).getRectBody())){
+                this.partesCulebra.get(i).setBitmap(this.bitmap[8]);
+            }else if(this.partesCulebra.get(i).getRectRight().intersect(this.partesCulebra.get(i+1).getRectBody()) &&
+                    this.partesCulebra.get(i).getRectTop().intersect(this.partesCulebra.get(i-1).getRectBody()) ||
+                    this.partesCulebra.get(i).getRectRight().intersect(this.partesCulebra.get(i-1).getRectBody()) &&
+                    this.partesCulebra.get(i).getRectTop().intersect(this.partesCulebra.get(i + 1).getRectBody())){
+                this.partesCulebra.get(i).setBitmap(this.bitmap[7]);
+            }else if(this.partesCulebra.get(i).getRectTop().intersect(this.partesCulebra.get(i+1).getRectBody()) &&
+                    this.partesCulebra.get(i).getRectBottom().intersect(this.partesCulebra.get(i-1).getRectBody()) ||
+                    this.partesCulebra.get(i).getRectTop().intersect(this.partesCulebra.get(i-1).getRectBody()) &&
+                    this.partesCulebra.get(i).getRectBottom().intersect(this.partesCulebra.get(i + 1).getRectBody())){
+                this.partesCulebra.get(i).setBitmap(this.bitmap[5]);
+            }else if(this.partesCulebra.get(i).getRectLeft().intersect(this.partesCulebra.get(i+1).getRectBody()) &&
+                    this.partesCulebra.get(i).getRectRight().intersect(this.partesCulebra.get(i-1).getRectBody()) ||
+                    this.partesCulebra.get(i).getRectLeft().intersect(this.partesCulebra.get(i-1).getRectBody()) &&
+                   this.partesCulebra.get(i).getRectRight().intersect(this.partesCulebra.get(i + 1).getRectBody())){
+                this.partesCulebra.get(i).setBitmap(this.bitmap[6]);
+            }
+        }
+
+
+        if(this.partesCulebra.get(length -1).getRectRight().intersect(this.partesCulebra.get(length-2).getRectBody())){
+            this.partesCulebra.get(length -1 ).setBitmap(this.bitmap[11]);
+        }else if(this.partesCulebra.get(length -1).getRectLeft().intersect(this.partesCulebra.get(length-2).getRectBody())){
+            this.partesCulebra.get(length -1 ).setBitmap(this.bitmap[12]);
+        }else if(this.partesCulebra.get(length -1).getRectTop().intersect(this.partesCulebra.get(length-2).getRectBody())){
+            this.partesCulebra.get(length -1 ).setBitmap(this.bitmap[13]);
+        }else if(this.partesCulebra.get(length -1).getRectBottom().intersect(this.partesCulebra.get(length-2).getRectBody())){
+            this.partesCulebra.get(length -1 ).setBitmap(this.bitmap[14]);
+        }
     }
 
     public void draw(Canvas canvas) {
@@ -87,5 +158,49 @@ public class Culebrita {
 
     public void setPartesCulebra(ArrayList<ParteCulebra> partesCulebra) {
         this.partesCulebra = partesCulebra;
+    }
+
+    public boolean isDerecha() {
+
+        return derecha;
+    }
+
+    public void setDerecha(boolean derecha) {
+        restablecerMovimiento();
+        this.derecha = derecha;
+    }
+
+    public boolean isArriba() {
+        return arriba;
+    }
+
+    public void setArriba(boolean arriba) {
+        restablecerMovimiento();
+        this.arriba = arriba;
+    }
+
+    public boolean isIzquierda() {
+        return izquierda;
+    }
+
+    public void setIzquierda(boolean izquierda) {
+        restablecerMovimiento();
+        this.izquierda = izquierda;
+    }
+
+    public boolean isAbajo() {
+        return abajo;
+    }
+
+    public void setAbajo(boolean abajo) {
+        restablecerMovimiento();
+        this.abajo = abajo;
+    }
+
+    public void restablecerMovimiento(){
+        this.derecha = false;
+        this.arriba = false;
+        this.izquierda = false;
+        this.abajo = false;
     }
 }
