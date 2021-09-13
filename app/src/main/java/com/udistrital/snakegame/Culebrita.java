@@ -203,4 +203,18 @@ public class Culebrita {
         this.izquierda = false;
         this.abajo = false;
     }
+
+    public void aumentarTamanio() {
+        ParteCulebra parteNueva = this.partesCulebra.get(length -1);
+        this.length++;
+        if(parteNueva.getBitmap() == this.bitmap[11]){
+            this.partesCulebra.add(new ParteCulebra(this.bitmap[11],  parteNueva.getX() - VistaJuego.tamanioMap, parteNueva.getY()  ));
+        }else if(parteNueva.getBitmap() == this.bitmap[12]){
+            this.partesCulebra.add(new ParteCulebra(this.bitmap[12],  parteNueva.getX() + VistaJuego.tamanioMap, parteNueva.getY()  ));
+        }else if(parteNueva.getBitmap() == this.bitmap[13]){
+            this.partesCulebra.add(new ParteCulebra(this.bitmap[13],  parteNueva.getX() , parteNueva.getY() + VistaJuego.tamanioMap));
+        }else if(parteNueva.getBitmap() == this.bitmap[14]){
+            this.partesCulebra.add(new ParteCulebra(this.bitmap[14],  parteNueva.getX() , parteNueva.getY() - VistaJuego.tamanioMap ));
+        }
+    }
 }

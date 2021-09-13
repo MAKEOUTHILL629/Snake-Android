@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 
+import android.graphics.Rect;
 import android.os.Handler;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
@@ -12,12 +13,14 @@ import android.view.View;
 import androidx.annotation.Nullable;
 
 import java.util.ArrayList;
+import java.util.Random;
 
 
 import static com.udistrital.snakegame.Constantes.SCREEN_HEIGHT;
 import static com.udistrital.snakegame.Constantes.SCREEN_WIDTH;
 
 public class VistaJuego extends View {
+    private Bitmap bitmapApple;
     private Bitmap bitmapSnake;
     private Bitmap bitMapGrass;
     private Bitmap bitMapGrassAux;
@@ -31,6 +34,7 @@ public class VistaJuego extends View {
     private float movimientoY;
     private Handler handler;
     private Runnable runnable;
+    private Manzana manzana;
     public VistaJuego(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
         this.bitMapGrass = BitmapFactory.decodeResource(this.getResources(), R.drawable.grass);
@@ -41,6 +45,9 @@ public class VistaJuego extends View {
 
         this.bitmapSnake = BitmapFactory.decodeResource(this.getResources(), R.drawable.snake1);
         this.bitmapSnake = Bitmap.createScaledBitmap(bitmapSnake, 14 * tamanioMap, tamanioMap, true);
+
+        this.bitmapApple = BitmapFactory.decodeResource(this.getResources(), R.drawable.apple);
+        this.bitmapApple = Bitmap.createScaledBitmap(bitmapApple, tamanioMap, tamanioMap, true);
 
         for (int i = 0; i < height; i++) {
             for (int j = 0; j < weigth; j++) {
@@ -55,6 +62,8 @@ public class VistaJuego extends View {
         }
 
         this.culebrita = new Culebrita(bitmapSnake, this.arrayPasto.get(126).getX(), this.arrayPasto.get(126).getY(), 4);
+        int xy[] = this.randomManzano();
+        this.manzana = new Manzana(bitmapApple, this.arrayPasto.get(xy[0]).getX(), this.arrayPasto.get(xy[1]).getY());
         this.handler = new Handler();
         this.runnable = new Runnable() {
             @Override
@@ -114,6 +123,43 @@ public class VistaJuego extends View {
         }
         culebrita.update();
         culebrita.draw(canvas);
+        manzana.draw(canvas);
+        if(this.culebrita.getPartesCulebra().get(0).getRectBody().intersect(manzana.getRect())){
+            int xy[] = randomManzano();
+            this.manzana.reset(this.arrayPasto.get(xy[0]).getX(),  this.arrayPasto.get(xy[1]).getY());
+            this.culebrita.aumentarTamanio();
+        }
         handler.postDelayed(runnable, 100);
+    }
+
+    public int[] randomManzano(){
+        int xy[] = new int[2];
+        Random random = new Random();
+        xy[0] = random.nextInt(this.arrayPasto.size() - 1);
+        xy[1] = random.nextInt(this.arrayPasto.size() - 1);
+
+        Rect rect = new Rect(this.arrayPasto.get(xy[0]).getX(), this.arrayPasto.get(xy[1]).getY(),
+                            this.arrayPasto.get(xy[0]).getX() + tamanioMap, this.arrayPasto.get(xy[1]).getY() + tamanioMap);
+
+        boolean check = true;
+
+        while (check){
+            check = false;
+            for(int i=0 ; i < this.culebrita.getPartesCulebra().size() ;i++){
+
+                if(rect.intersect(this.culebrita.getPartesCulebra().get(i).getRectBody())){
+                    check = true;
+                    xy[0] = random.nextInt(this.arrayPasto.size() - 1);
+                    xy[1] = random.nextInt(this.arrayPasto.size() - 1);
+
+                    rect = new Rect(this.arrayPasto.get(xy[0]).getX(), this.arrayPasto.get(xy[1]).getY(),
+                            this.arrayPasto.get(xy[0]).getX() + tamanioMap, this.arrayPasto.get(xy[1]).getY() + tamanioMap);
+
+                }
+
+            }
+        }
+
+        return  xy;
     }
 }
