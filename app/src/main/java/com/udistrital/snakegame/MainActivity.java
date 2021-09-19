@@ -11,6 +11,9 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
+import com.udistrital.snakegame.utilidades.Constantes;
+
+import static com.udistrital.snakegame.utilidades.Constantes.MEJOR_PUNTUACION;
 
 public class MainActivity extends AppCompatActivity {
     public static ImageView imgDeslizar;
@@ -41,7 +44,7 @@ public class MainActivity extends AppCompatActivity {
         int mejorPuntuacion =0;
         SharedPreferences sharedPreferences = this.getSharedPreferences("gamesetting", Context.MODE_PRIVATE);
         if(sharedPreferences != null){
-            mejorPuntuacion = sharedPreferences.getInt("mejor_puntuacion",0);
+            mejorPuntuacion = sharedPreferences.getInt(MEJOR_PUNTUACION,0);
         }
 
         MainActivity.textViewMejorPuntuacion.setText(mejorPuntuacion + "");

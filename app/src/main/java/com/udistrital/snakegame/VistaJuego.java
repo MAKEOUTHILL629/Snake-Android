@@ -14,13 +14,14 @@ import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
 import androidx.annotation.Nullable;
+import com.udistrital.snakegame.modelos.Culebrita;
+import com.udistrital.snakegame.modelos.Manzana;
+import com.udistrital.snakegame.modelos.Pasto;
 
 import java.util.ArrayList;
 import java.util.Random;
 
-
-import static com.udistrital.snakegame.Constantes.SCREEN_HEIGHT;
-import static com.udistrital.snakegame.Constantes.SCREEN_WIDTH;
+import static com.udistrital.snakegame.utilidades.Constantes.*;
 
 public class VistaJuego extends View {
     private Bitmap bitmapApple;
@@ -202,13 +203,13 @@ public class VistaJuego extends View {
                 mejorPuntuacion = puntuacion;
                 SharedPreferences sharedPreferences = context.getSharedPreferences("gamesetting", Context.MODE_PRIVATE);
                 SharedPreferences.Editor editor = sharedPreferences.edit();
-                editor.putInt("mejor_puntuacion", mejorPuntuacion);
+                editor.putInt(MEJOR_PUNTUACION, mejorPuntuacion);
                 editor.apply();
                 MainActivity.textViewMejorPuntuacion.setText(String.valueOf(mejorPuntuacion));
             }
 
         }
-        handler.postDelayed(runnable, 500);
+        handler.postDelayed(runnable, 300);
     }
 
     private void juegoTerminado() {

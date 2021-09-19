@@ -1,8 +1,9 @@
-package com.udistrital.snakegame;
+package com.udistrital.snakegame.modelos;
 
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Rect;
+import com.udistrital.snakegame.VistaJuego;
 
 public class Manzana {
     private Bitmap bitmap;

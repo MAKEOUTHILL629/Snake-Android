@@ -1,4 +1,4 @@
-package com.udistrital.snakegame;
+package com.udistrital.snakegame.modelos;
 
 import android.graphics.Bitmap;
 
