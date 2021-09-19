@@ -36,7 +36,7 @@ public class Culebrita {
         this.bitmap[11] = Bitmap.createBitmap(bitmap, 11 * VistaJuego.tamanioMap, 0, VistaJuego.tamanioMap, VistaJuego.tamanioMap);
         this.bitmap[12] = Bitmap.createBitmap(bitmap, 12 * VistaJuego.tamanioMap, 0, VistaJuego.tamanioMap, VistaJuego.tamanioMap);
         this.bitmap[14] = Bitmap.createBitmap(bitmap, 13 * VistaJuego.tamanioMap, 0, VistaJuego.tamanioMap, VistaJuego.tamanioMap);
-
+        setDerecha(true);
         this.partesCulebra.add(new ParteCulebra(this.bitmap[4], x, y));
 
         for (int i = 1; i < this.length - 1; i++) {
@@ -44,7 +44,7 @@ public class Culebrita {
         }
         this.partesCulebra.add(new ParteCulebra(this.bitmap[11], this.partesCulebra.get(length - 2).getX() - VistaJuego.tamanioMap, y));
 
-        setDerecha(true);
+
     }
 
     public void update(){

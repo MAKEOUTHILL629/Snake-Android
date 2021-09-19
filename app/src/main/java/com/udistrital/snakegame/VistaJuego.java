@@ -1,11 +1,14 @@
 package com.udistrital.snakegame;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 
 import android.graphics.Rect;
+import android.media.AudioAttributes;
+import android.media.SoundPool;
 import android.os.Handler;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
@@ -24,6 +27,7 @@ public class VistaJuego extends View {
     private Bitmap bitmapSnake;
     private Bitmap bitMapGrass;
     private Bitmap bitMapGrassAux;
+
     public static int tamanioMap = 75 * SCREEN_WIDTH / 1080;
     private int height = 21;
     private int weigth = 12;
@@ -35,8 +39,28 @@ public class VistaJuego extends View {
     private Handler handler;
     private Runnable runnable;
     private Manzana manzana;
+    public static boolean estaJugando = false;
+    public static int puntuacion = 0;
+    public static int mejorPuntuacion = 0;
+    private Context context;
+    private int sonidoComer;
+    private int sonidoMorir;
+    private float volumenSonido;
+    private boolean cargandoSonido;
+    private SoundPool soundPool;
+
+
+
+
     public VistaJuego(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
+        this.context = context;
+        SharedPreferences sharedPreferences = context.getSharedPreferences("gamesetting", Context.MODE_PRIVATE);
+        if(sharedPreferences != null){
+            mejorPuntuacion = sharedPreferences.getInt("mejor_puntuacion", 0);
+        }
+
+
         this.bitMapGrass = BitmapFactory.decodeResource(this.getResources(), R.drawable.grass);
         this.bitMapGrass = Bitmap.createScaledBitmap(bitMapGrass, tamanioMap, tamanioMap, true);
 
@@ -51,13 +75,11 @@ public class VistaJuego extends View {
 
         for (int i = 0; i < height; i++) {
             for (int j = 0; j < weigth; j++) {
-
-//                if(){
-                arrayPasto.add(new Pasto((i + j) % 2 == 0 ? bitMapGrass : bitMapGrassAux, j * tamanioMap + SCREEN_WIDTH / 2 - (weigth / 2) * tamanioMap, i * tamanioMap + 100 * SCREEN_HEIGHT / 1920, tamanioMap, tamanioMap));
-//                }else{
-//                    arrayPasto.add(new Pasto(, j * tamanioMap + SCREEN_WIDTH / 2 - (weigth / 2) * tamanioMap , i * tamanioMap + 100 * SCREEN_HEIGHT / 1920, tamanioMap, tamanioMap));
-//                }
-
+                //Bitmap bitmapAuxiliar = (i + j) % 2 == 0 ? bitMapGrass : bitMapGrassAux;
+                Bitmap bitmapAuxiliar =  bitMapGrass ;
+                arrayPasto.add(new Pasto(bitmapAuxiliar,
+                        j * bitmapAuxiliar.getWidth() + SCREEN_WIDTH / 2 - (weigth / 2) * bitmapAuxiliar.getWidth(),
+                        i * bitmapAuxiliar.getHeight() + 50 * SCREEN_HEIGHT / 1920, bitmapAuxiliar.getWidth(), bitmapAuxiliar.getHeight()));
             }
         }
 
@@ -71,44 +93,71 @@ public class VistaJuego extends View {
                 invalidate();
             }
         };
+
+        AudioAttributes audioAttributes = new AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_GAME)
+                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                .build();
+        SoundPool.Builder builder = new SoundPool.Builder();
+        builder.setAudioAttributes(audioAttributes).setMaxStreams(5);
+        this.soundPool = builder.build();
+
+
+        this.soundPool.setOnLoadCompleteListener(new SoundPool.OnLoadCompleteListener() {
+            @Override
+            public void onLoadComplete(SoundPool soundPool, int sampleId, int status) {
+                cargandoSonido = true;
+            }
+        });
+        sonidoComer = this.soundPool.load(context, R.raw.eat, 1);
+        sonidoMorir = this.soundPool.load(context, R.raw.die, 1);
     }
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         int a = event.getActionMasked();
-        switch (a){
-            case MotionEvent.ACTION_MOVE:{
-                if(move == false){
+        switch (a) {
+            case MotionEvent.ACTION_MOVE: {
+                if (move == false) {
                     movimientoX = event.getX();
                     movimientoY = event.getY();
                     move = true;
-                }else {
-                    if(movimientoX -  event.getX() > 100 *  SCREEN_WIDTH/ 1000 && !culebrita.isDerecha()){
+                } else {
+                    if (movimientoX - event.getX() > 100  && !culebrita.isDerecha()) {
                         movimientoX = event.getX();
                         movimientoY = event.getY();
                         culebrita.setIzquierda(true);
-                    }else if(event.getX()-movimientoX    > 100 *  SCREEN_WIDTH/ 1000 && !culebrita.isIzquierda()){
+                        estaJugando = true;
+                        MainActivity.imgDeslizar.setVisibility(INVISIBLE);
+                    } else if (event.getX() - movimientoX > 100  && !culebrita.isIzquierda()) {
                         movimientoX = event.getX();
                         movimientoY = event.getY();
                         culebrita.setDerecha(true);
-                    }else if(movimientoY -  event.getY() > 100 *  SCREEN_WIDTH/ 1000 && !culebrita.isAbajo()){
-                        movimientoX = event.getX();
-                        movimientoY = event.getY();
-                        culebrita.setArriba(true);
-                    }else if(event.getY() - movimientoY   > 100 *  SCREEN_WIDTH/ 1000 && !culebrita.isArriba()){
+                        estaJugando = true;
+                        MainActivity.imgDeslizar.setVisibility(INVISIBLE);
+                    } else if (event.getY() - movimientoY  > 100  && !culebrita.isArriba()) {
                         movimientoX = event.getX();
                         movimientoY = event.getY();
                         culebrita.setAbajo(true);
+                        estaJugando = true;
+                        MainActivity.imgDeslizar.setVisibility(INVISIBLE);
+                    } else if (movimientoY - event.getY()  > 100  && !culebrita.isAbajo()) {
+                        movimientoX = event.getX();
+                        movimientoY = event.getY();
+                        culebrita.setArriba(true);
+                        estaJugando = true;
+                        MainActivity.imgDeslizar.setVisibility(INVISIBLE);
                     }
                 }
                 break;
             }
-            case MotionEvent.ACTION_UP:{
-                movimientoX =0;
-                movimientoY =0;
+            case MotionEvent.ACTION_UP: {
+                movimientoX = 0;
+                movimientoY = 0;
                 move = false;
                 break;
             }
+
         }
         return true;
     }
@@ -121,33 +170,73 @@ public class VistaJuego extends View {
                 this.arrayPasto) {
             canvas.drawBitmap(pastito.getBitmap(), pastito.getX(), pastito.getY(), null);
         }
-        culebrita.update();
+
+        if(estaJugando){
+            this.culebrita.update();
+            if(this.culebrita.getPartesCulebra().get(0).getX() < this.arrayPasto.get(0).getX()
+               || this.culebrita.getPartesCulebra().get(0).getY() < this.arrayPasto.get(0).getY()
+               || this.culebrita.getPartesCulebra().get(0).getY() + tamanioMap >  this.arrayPasto.get(this.arrayPasto.size() - 1).getY() + tamanioMap
+               || this.culebrita.getPartesCulebra().get(0).getX() + tamanioMap > this.arrayPasto.get(this.arrayPasto.size() - 1).getX() + tamanioMap ){
+                juegoTerminado();
+            }
+
+            for (int i = 1; i < this.culebrita.getPartesCulebra().size(); i++){
+                if (this.culebrita.getPartesCulebra().get(0).getRectBody().intersect(this.culebrita.getPartesCulebra().get(i).getRectBody())){
+                    juegoTerminado();
+                }
+            }
+        }
         culebrita.draw(canvas);
         manzana.draw(canvas);
-        if(this.culebrita.getPartesCulebra().get(0).getRectBody().intersect(manzana.getRect())){
+
+        if (this.culebrita.getPartesCulebra().get(0).getRectBody().intersect(manzana.getRect())) {
+            if(cargandoSonido){
+                int pistaId = this.soundPool.play(this.sonidoComer, (float) 0.5, (float)0.5, 1, 0, 1f);
+            }
             int xy[] = randomManzano();
-            this.manzana.reset(this.arrayPasto.get(xy[0]).getX(),  this.arrayPasto.get(xy[1]).getY());
+            this.manzana.reset(this.arrayPasto.get(xy[0]).getX(), this.arrayPasto.get(xy[1]).getY());
             this.culebrita.aumentarTamanio();
+            puntuacion++;
+            MainActivity.textViewPuntuacion.setText(String.valueOf(puntuacion));
+            if(puntuacion > mejorPuntuacion){
+                mejorPuntuacion = puntuacion;
+                SharedPreferences sharedPreferences = context.getSharedPreferences("gamesetting", Context.MODE_PRIVATE);
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.putInt("mejor_puntuacion", mejorPuntuacion);
+                editor.apply();
+                MainActivity.textViewMejorPuntuacion.setText(String.valueOf(mejorPuntuacion));
+            }
+
         }
-        handler.postDelayed(runnable, 100);
+        handler.postDelayed(runnable, 500);
     }
 
-    public int[] randomManzano(){
+    private void juegoTerminado() {
+        estaJugando = false;
+        MainActivity.dialogPuntuacion.show();
+        MainActivity.textViewDialogMejorPuntuacion.setText(mejorPuntuacion + "");
+        MainActivity.textViewDialogPuntuacion.setText(puntuacion + "");
+        if(cargandoSonido){
+            int pistaId = this.soundPool.play(this.sonidoMorir, (float)0.5, (float)0.5, 1, 0, 1f);
+        }
+    }
+
+    public int[] randomManzano() {
         int xy[] = new int[2];
         Random random = new Random();
         xy[0] = random.nextInt(this.arrayPasto.size() - 1);
         xy[1] = random.nextInt(this.arrayPasto.size() - 1);
 
         Rect rect = new Rect(this.arrayPasto.get(xy[0]).getX(), this.arrayPasto.get(xy[1]).getY(),
-                            this.arrayPasto.get(xy[0]).getX() + tamanioMap, this.arrayPasto.get(xy[1]).getY() + tamanioMap);
+                this.arrayPasto.get(xy[0]).getX() + tamanioMap, this.arrayPasto.get(xy[1]).getY() + tamanioMap);
 
         boolean check = true;
 
-        while (check){
+        while (check) {
             check = false;
-            for(int i=0 ; i < this.culebrita.getPartesCulebra().size() ;i++){
+            for (int i = 0; i < this.culebrita.getPartesCulebra().size(); i++) {
 
-                if(rect.intersect(this.culebrita.getPartesCulebra().get(i).getRectBody())){
+                if (rect.intersect(this.culebrita.getPartesCulebra().get(i).getRectBody())) {
                     check = true;
                     xy[0] = random.nextInt(this.arrayPasto.size() - 1);
                     xy[1] = random.nextInt(this.arrayPasto.size() - 1);
@@ -160,6 +249,26 @@ public class VistaJuego extends View {
             }
         }
 
-        return  xy;
+        return xy;
     }
+
+    public void reset(){
+        for(int i = 0; i < height; i++){
+            for (int j = 0; j < weigth; j++){
+                ///Bitmap bitmapAuxiliar = (i + j) % 2 == 0 ? bitMapGrass : bitMapGrassAux;
+                Bitmap bitmapAuxiliar =  bitMapGrass ;
+
+                arrayPasto.add(new Pasto(bitmapAuxiliar,
+                        j * bitmapAuxiliar.getWidth() + SCREEN_WIDTH / 2 - (weigth / 2) * bitmapAuxiliar.getWidth(),
+                        i * bitmapAuxiliar.getHeight() + 50 * SCREEN_HEIGHT / 1920, bitmapAuxiliar.getWidth(), bitmapAuxiliar.getHeight()));
+            }
+        }
+        this.culebrita = new Culebrita(bitmapSnake,this.arrayPasto.get(126).getX(),this.arrayPasto.get(126).getY(), 4);
+        int xy[] = this.randomManzano();
+        this.manzana = new Manzana(bitmapApple, this.arrayPasto.get(xy[0]).getX(), this.arrayPasto.get(xy[1]).getY());
+
+        puntuacion = 0;
+        MainActivity.textViewPuntuacion.setText(String.valueOf(puntuacion));
+    }
+
 }
