@@ -17,6 +17,8 @@ import androidx.annotation.Nullable;
 import com.udistrital.snakegame.modelos.Culebrita;
 import com.udistrital.snakegame.modelos.Manzana;
 import com.udistrital.snakegame.modelos.Pasto;
+import com.udistrital.snakegame.modelos.SesionMultijugador;
+import com.udistrital.snakegame.repositorios.ConexionFirebase;
 
 import java.util.ArrayList;
 import java.util.Random;
@@ -49,6 +51,7 @@ public class VistaJuego extends View {
     private float volumenSonido;
     private boolean cargandoSonido;
     private SoundPool soundPool;
+    private SesionMultijugador sesionMultijugador;
 
 
 
@@ -76,7 +79,7 @@ public class VistaJuego extends View {
 
         for (int i = 0; i < height; i++) {
             for (int j = 0; j < weigth; j++) {
-                //Bitmap bitmapAuxiliar = (i + j) % 2 == 0 ? bitMapGrass : bitMapGrassAux;
+
                 Bitmap bitmapAuxiliar =  bitMapGrass ;
                 arrayPasto.add(new Pasto(bitmapAuxiliar,
                         j * bitmapAuxiliar.getWidth() + SCREEN_WIDTH / 2 - (weigth / 2) * bitmapAuxiliar.getWidth(),
@@ -112,6 +115,14 @@ public class VistaJuego extends View {
         });
         sonidoComer = this.soundPool.load(context, R.raw.eat, 1);
         sonidoMorir = this.soundPool.load(context, R.raw.die, 1);
+
+        this.sesionMultijugador = new SesionMultijugador("");
+
+
+    }
+    public void iniciarGameMultiplayer(String nombre){
+        this.sesionMultijugador.setNombreUser(nombre);
+        ConexionFirebase.getInstance().guardar(this.sesionMultijugador);
     }
 
     @Override
@@ -120,29 +131,34 @@ public class VistaJuego extends View {
         switch (a) {
             case MotionEvent.ACTION_MOVE: {
                 if (move == false) {
+                    System.out.println("Toma de movimiento");
                     movimientoX = event.getX();
                     movimientoY = event.getY();
                     move = true;
                 } else {
                     if (movimientoX - event.getX() > 100  && !culebrita.isDerecha()) {
+                        System.out.println("Movimiento Izquierda");
                         movimientoX = event.getX();
                         movimientoY = event.getY();
                         culebrita.setIzquierda(true);
                         estaJugando = true;
                         MainActivity.imgDeslizar.setVisibility(INVISIBLE);
                     } else if (event.getX() - movimientoX > 100  && !culebrita.isIzquierda()) {
+                        System.out.println("Movimiento Derecha");
                         movimientoX = event.getX();
                         movimientoY = event.getY();
                         culebrita.setDerecha(true);
                         estaJugando = true;
                         MainActivity.imgDeslizar.setVisibility(INVISIBLE);
                     } else if (event.getY() - movimientoY  > 100  && !culebrita.isArriba()) {
+                        System.out.println("Movimiento Abajo");
                         movimientoX = event.getX();
                         movimientoY = event.getY();
                         culebrita.setAbajo(true);
                         estaJugando = true;
                         MainActivity.imgDeslizar.setVisibility(INVISIBLE);
                     } else if (movimientoY - event.getY()  > 100  && !culebrita.isAbajo()) {
+                        System.out.println("Movimiento Arriba");
                         movimientoX = event.getX();
                         movimientoY = event.getY();
                         culebrita.setArriba(true);
@@ -153,6 +169,7 @@ public class VistaJuego extends View {
                 break;
             }
             case MotionEvent.ACTION_UP: {
+                System.out.println("Reset Movimiento");
                 movimientoX = 0;
                 movimientoY = 0;
                 move = false;
@@ -173,20 +190,21 @@ public class VistaJuego extends View {
         }
 
         if(estaJugando){
-            this.culebrita.update();
+
             if(this.culebrita.getPartesCulebra().get(0).getX() < this.arrayPasto.get(0).getX()
                || this.culebrita.getPartesCulebra().get(0).getY() < this.arrayPasto.get(0).getY()
                || this.culebrita.getPartesCulebra().get(0).getY() + tamanioMap >  this.arrayPasto.get(this.arrayPasto.size() - 1).getY() + tamanioMap
                || this.culebrita.getPartesCulebra().get(0).getX() + tamanioMap > this.arrayPasto.get(this.arrayPasto.size() - 1).getX() + tamanioMap ){
                 juegoTerminado();
             }
-
+            this.culebrita.update();
             for (int i = 1; i < this.culebrita.getPartesCulebra().size(); i++){
                 if (this.culebrita.getPartesCulebra().get(0).getRectBody().intersect(this.culebrita.getPartesCulebra().get(i).getRectBody())){
                     juegoTerminado();
                 }
             }
         }
+
         culebrita.draw(canvas);
         manzana.draw(canvas);
 
@@ -209,10 +227,12 @@ public class VistaJuego extends View {
             }
 
         }
-        handler.postDelayed(runnable, 300);
+
+
+        handler.postDelayed(runnable, this.sesionMultijugador.getVelocidad());
     }
 
-    private void juegoTerminado() {
+    public void juegoTerminado() {
         estaJugando = false;
         MainActivity.dialogPuntuacion.show();
         MainActivity.textViewDialogMejorPuntuacion.setText(mejorPuntuacion + "");

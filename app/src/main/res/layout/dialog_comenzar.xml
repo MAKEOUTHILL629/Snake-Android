@@ -71,9 +71,22 @@
             </RelativeLayout>
         </LinearLayout>
     </androidx.cardview.widget.CardView>
+    <androidx.cardview.widget.CardView android:id="@+id/name" android:layout_marginTop="10dp"
+                                       android:layout_centerHorizontal="true"
+                                       android:layout_below="@+id/cardview_puntuacion" android:layout_width="300dp"
+                                       android:layout_height="wrap_content">
+
+        <EditText
+                android:layout_width="300dp"
+                android:layout_height="wrap_content"
+                android:inputType="textPersonName"
+                android:text=""
+                android:ems="10"
+                android:id="@+id/editTextTextPersonName"/>
+    </androidx.cardview.widget.CardView>
     <androidx.cardview.widget.CardView
             android:id="@+id/cardview_btn_comenzar"
-            android:layout_below="@+id/cardview_puntuacion"
+            android:layout_below="@+id/name"
             android:layout_marginTop="10dp"
             app:cardCornerRadius="10dp"
             android:elevation="10dp"
@@ -82,7 +95,7 @@
             android:layout_height="wrap_content">
         <RelativeLayout
                 android:id="@+id/relativelayout_comenzar"
-                android:background="#000E67"
+                android:background="#3652FF"
                 android:padding="10dp"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">

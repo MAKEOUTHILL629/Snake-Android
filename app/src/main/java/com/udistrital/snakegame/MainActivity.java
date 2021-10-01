@@ -3,9 +3,11 @@ package com.udistrital.snakegame;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.util.DisplayMetrics;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -23,6 +25,7 @@ public class MainActivity extends AppCompatActivity {
     public static TextView textViewMejorPuntuacion;
     public static TextView textViewDialogPuntuacion;
     public static TextView textViewDialogMejorPuntuacion;
+    public static EditText textViewnombreJugador;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,6 +41,7 @@ public class MainActivity extends AppCompatActivity {
         textViewPuntuacion = findViewById(R.id.txt_puntuacion);
         textViewMejorPuntuacion = findViewById(R.id.txt_mejor_puntuacion);
         dialogoPuntuacion();
+        dialogPuntuacion.show();
     }
 
     private void dialogoPuntuacion(){
@@ -54,14 +58,21 @@ public class MainActivity extends AppCompatActivity {
         textViewDialogPuntuacion = dialogPuntuacion.findViewById(R.id.txt_dialog_puntuacion);
         textViewDialogMejorPuntuacion = dialogPuntuacion.findViewById(R.id.txt_dialog_mejor_puntuacion);
         textViewDialogMejorPuntuacion.setText(mejorPuntuacion + "");
+        textViewnombreJugador = dialogPuntuacion.findViewById(R.id.editTextTextPersonName);
         dialogPuntuacion.setCanceledOnTouchOutside(false);
         RelativeLayout relativeLayoutComenzar = dialogPuntuacion.findViewById(R.id.relativelayout_comenzar);
         relativeLayoutComenzar.setOnClickListener( (view) -> {
-            imgDeslizar.setVisibility(View.VISIBLE);
-            vistaJuego.reset();
-            dialogPuntuacion.dismiss();
+            if(!textViewnombreJugador.getText().toString().equals("")){
+                textViewnombreJugador.setBackgroundColor(Color.BLACK);
+                imgDeslizar.setVisibility(View.VISIBLE);
+                vistaJuego.reset();
+                vistaJuego.iniciarGameMultiplayer(textViewnombreJugador.getText().toString());
+                dialogPuntuacion.dismiss();
+            }else{
+                textViewnombreJugador.setBackgroundColor(Color.RED);
+            }
         });
-        dialogPuntuacion.show();
+            
 
     }
 }
