@@ -48,6 +48,7 @@ public class Culebrita {
 
     }
 
+
     public void update(){
         for(int i = length-1; i > 0; i-- ){
             this.partesCulebra.get(i).setX(this.partesCulebra.get(i-1).getX());
@@ -180,6 +181,7 @@ public class Culebrita {
         this.arriba = arriba;
     }
 
+
     public boolean isIzquierda() {
         return izquierda;
     }
@@ -196,6 +198,14 @@ public class Culebrita {
     public void setAbajo(boolean abajo) {
         restablecerMovimiento();
         this.abajo = abajo;
+    }
+
+    public boolean verificarCuerpoHorizontal(){
+        return this.partesCulebra.get(1).getBitmap() == this.bitmap[6];
+    }
+
+    public boolean verificarCuerpoVertical(){
+        return this.partesCulebra.get(1).getBitmap() == this.bitmap[5];
     }
 
     public void restablecerMovimiento(){

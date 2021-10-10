@@ -9,16 +9,21 @@ import android.graphics.Canvas;
 import android.graphics.Rect;
 import android.media.AudioAttributes;
 import android.media.SoundPool;
+
 import android.os.Handler;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
+
 import androidx.annotation.Nullable;
+
+
 import com.udistrital.snakegame.modelos.Culebrita;
 import com.udistrital.snakegame.modelos.Manzana;
 import com.udistrital.snakegame.modelos.Pasto;
 import com.udistrital.snakegame.modelos.SesionMultijugador;
 import com.udistrital.snakegame.repositorios.ConexionFirebase;
+import com.udistrital.snakegame.repositorios.Online;
 
 import java.util.ArrayList;
 import java.util.Random;
@@ -52,15 +57,18 @@ public class VistaJuego extends View {
     private boolean cargandoSonido;
     private SoundPool soundPool;
     private SesionMultijugador sesionMultijugador;
+    private Integer puntuacionOponente = 0;
 
 
-
+    public SesionMultijugador getSesionMultijugador() {
+        return sesionMultijugador;
+    }
 
     public VistaJuego(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
         this.context = context;
         SharedPreferences sharedPreferences = context.getSharedPreferences("gamesetting", Context.MODE_PRIVATE);
-        if(sharedPreferences != null){
+        if (sharedPreferences != null) {
             mejorPuntuacion = sharedPreferences.getInt("mejor_puntuacion", 0);
         }
 
@@ -80,7 +88,7 @@ public class VistaJuego extends View {
         for (int i = 0; i < height; i++) {
             for (int j = 0; j < weigth; j++) {
 
-                Bitmap bitmapAuxiliar =  bitMapGrass ;
+                Bitmap bitmapAuxiliar = bitMapGrass;
                 arrayPasto.add(new Pasto(bitmapAuxiliar,
                         j * bitmapAuxiliar.getWidth() + SCREEN_WIDTH / 2 - (weigth / 2) * bitmapAuxiliar.getWidth(),
                         i * bitmapAuxiliar.getHeight() + 50 * SCREEN_HEIGHT / 1920, bitmapAuxiliar.getWidth(), bitmapAuxiliar.getHeight()));
@@ -120,9 +128,12 @@ public class VistaJuego extends View {
 
 
     }
-    public void iniciarGameMultiplayer(String nombre){
+
+    public void iniciarGameMultiplayer(String nombre) {
         this.sesionMultijugador.setNombreUser(nombre);
-        ConexionFirebase.getInstance().guardar(this.sesionMultijugador);
+        this.sesionMultijugador.setListo(true);
+        this.sesionMultijugador.setEstado("JUGANDO");
+        ConexionFirebase.guardar(this.sesionMultijugador);
     }
 
     @Override
@@ -131,45 +142,51 @@ public class VistaJuego extends View {
         switch (a) {
             case MotionEvent.ACTION_MOVE: {
                 if (move == false) {
-                    System.out.println("Toma de movimiento");
+
                     movimientoX = event.getX();
                     movimientoY = event.getY();
                     move = true;
                 } else {
-                    if (movimientoX - event.getX() > 100  && !culebrita.isDerecha()) {
-                        System.out.println("Movimiento Izquierda");
+                    if (movimientoX - event.getX() > 95 && !culebrita.isDerecha() && !culebrita.verificarCuerpoHorizontal()) {
+
                         movimientoX = event.getX();
                         movimientoY = event.getY();
                         culebrita.setIzquierda(true);
                         estaJugando = true;
                         MainActivity.imgDeslizar.setVisibility(INVISIBLE);
-                    } else if (event.getX() - movimientoX > 100  && !culebrita.isIzquierda()) {
-                        System.out.println("Movimiento Derecha");
+
+                    } else if (event.getX() - movimientoX > 95 && !culebrita.isIzquierda() && !culebrita.verificarCuerpoHorizontal()) {
+
                         movimientoX = event.getX();
                         movimientoY = event.getY();
                         culebrita.setDerecha(true);
                         estaJugando = true;
                         MainActivity.imgDeslizar.setVisibility(INVISIBLE);
-                    } else if (event.getY() - movimientoY  > 100  && !culebrita.isArriba()) {
-                        System.out.println("Movimiento Abajo");
+
+                    } else if (event.getY() - movimientoY > 95 && !culebrita.isArriba() && !culebrita.verificarCuerpoVertical()) {
+
+
                         movimientoX = event.getX();
                         movimientoY = event.getY();
                         culebrita.setAbajo(true);
                         estaJugando = true;
                         MainActivity.imgDeslizar.setVisibility(INVISIBLE);
-                    } else if (movimientoY - event.getY()  > 100  && !culebrita.isAbajo()) {
-                        System.out.println("Movimiento Arriba");
+
+                    } else if (movimientoY - event.getY() > 95 && !culebrita.isAbajo() && !culebrita.verificarCuerpoVertical()) {
+
                         movimientoX = event.getX();
                         movimientoY = event.getY();
                         culebrita.setArriba(true);
                         estaJugando = true;
                         MainActivity.imgDeslizar.setVisibility(INVISIBLE);
+
                     }
+
                 }
                 break;
             }
             case MotionEvent.ACTION_UP: {
-                System.out.println("Reset Movimiento");
+
                 movimientoX = 0;
                 movimientoY = 0;
                 move = false;
@@ -189,35 +206,43 @@ public class VistaJuego extends View {
             canvas.drawBitmap(pastito.getBitmap(), pastito.getX(), pastito.getY(), null);
         }
 
-        if(estaJugando){
 
-            if(this.culebrita.getPartesCulebra().get(0).getX() < this.arrayPasto.get(0).getX()
-               || this.culebrita.getPartesCulebra().get(0).getY() < this.arrayPasto.get(0).getY()
-               || this.culebrita.getPartesCulebra().get(0).getY() + tamanioMap >  this.arrayPasto.get(this.arrayPasto.size() - 1).getY() + tamanioMap
-               || this.culebrita.getPartesCulebra().get(0).getX() + tamanioMap > this.arrayPasto.get(this.arrayPasto.size() - 1).getX() + tamanioMap ){
+        if (estaJugando) {
+
+            if (this.culebrita.getPartesCulebra().get(0).getX() < this.arrayPasto.get(0).getX()
+                    || this.culebrita.getPartesCulebra().get(0).getY() < this.arrayPasto.get(0).getY()
+                    || this.culebrita.getPartesCulebra().get(0).getY() + tamanioMap > this.arrayPasto.get(this.arrayPasto.size() - 1).getY() + tamanioMap
+                    || this.culebrita.getPartesCulebra().get(0).getX() + tamanioMap > this.arrayPasto.get(this.arrayPasto.size() - 1).getX() + tamanioMap) {
+
                 juegoTerminado();
+            } else {
+                this.culebrita.update();
             }
-            this.culebrita.update();
-            for (int i = 1; i < this.culebrita.getPartesCulebra().size(); i++){
-                if (this.culebrita.getPartesCulebra().get(0).getRectBody().intersect(this.culebrita.getPartesCulebra().get(i).getRectBody())){
+
+            for (int i = 1; i < this.culebrita.getPartesCulebra().size(); i++) {
+                if (this.culebrita.getPartesCulebra().get(0).getRectBody().intersect(this.culebrita.getPartesCulebra().get(i).getRectBody())) {
+
                     juegoTerminado();
                 }
             }
-        }
 
+        }
         culebrita.draw(canvas);
         manzana.draw(canvas);
 
+
         if (this.culebrita.getPartesCulebra().get(0).getRectBody().intersect(manzana.getRect())) {
-            if(cargandoSonido){
-                int pistaId = this.soundPool.play(this.sonidoComer, (float) 0.5, (float)0.5, 1, 0, 1f);
+            if (cargandoSonido) {
+                int pistaId = this.soundPool.play(this.sonidoComer, (float) 0.5, (float) 0.5, 1, 0, 1f);
             }
             int xy[] = randomManzano();
             this.manzana.reset(this.arrayPasto.get(xy[0]).getX(), this.arrayPasto.get(xy[1]).getY());
             this.culebrita.aumentarTamanio();
             puntuacion++;
+            this.sesionMultijugador.setPuntuacion(puntuacion);
+            ConexionFirebase.guardar(this.sesionMultijugador);
             MainActivity.textViewPuntuacion.setText(String.valueOf(puntuacion));
-            if(puntuacion > mejorPuntuacion){
+            if (puntuacion > mejorPuntuacion) {
                 mejorPuntuacion = puntuacion;
                 SharedPreferences sharedPreferences = context.getSharedPreferences("gamesetting", Context.MODE_PRIVATE);
                 SharedPreferences.Editor editor = sharedPreferences.edit();
@@ -229,17 +254,44 @@ public class VistaJuego extends View {
         }
 
 
-        handler.postDelayed(runnable, this.sesionMultijugador.getVelocidad());
+        if (Online.oponente != null) {
+
+            if (this.puntuacionOponente < Online.oponente.getPuntuacion()) {
+                this.puntuacionOponente = Online.oponente.getPuntuacion();
+                this.culebrita.aumentarTamanio();
+            }
+
+            handler.postDelayed(runnable, 350 - (Online.oponente.getPuntuacion()));
+        } else {
+            handler.postDelayed(runnable, 350);
+        }
+
     }
 
     public void juegoTerminado() {
+
+        if ((Online.oponente.getEstado().equals("PERDIO") || Online.oponente.getEstado().equals("RESET")) && Online.oponente.getPuntuacion() <= puntuacion) {
+            MainActivity.textViewMultiplayer.setText("Le haz ganado a " + Online.oponente.getNombreUser() + " felicidades!!");
+        } else if (Online.oponente.getEstado().equals("JUGANDO")) {
+            MainActivity.textViewMultiplayer.setText("Haz perdido, te ha ganado " + Online.oponente.getNombreUser());
+        }
+        this.sesionMultijugador.setEstado("PERDIO");
+        this.sesionMultijugador.setOponente("");
+        ConexionFirebase.guardar(this.sesionMultijugador);
         estaJugando = false;
         MainActivity.dialogPuntuacion.show();
         MainActivity.textViewDialogMejorPuntuacion.setText(mejorPuntuacion + "");
         MainActivity.textViewDialogPuntuacion.setText(puntuacion + "");
-        if(cargandoSonido){
-            int pistaId = this.soundPool.play(this.sonidoMorir, (float)0.5, (float)0.5, 1, 0, 1f);
+        if (cargandoSonido) {
+            int pistaId = this.soundPool.play(this.sonidoMorir, (float) 0.5, (float) 0.5, 1, 0, 1f);
         }
+
+        this.sesionMultijugador.setEstado("RESET");
+        this.sesionMultijugador.setPuntuacion(0);
+        this.sesionMultijugador.setListo(true);
+        this.sesionMultijugador.setOponente("");
+        this.sesionMultijugador.setNombreUser(getSesionMultijugador().getNombreUser());
+        ConexionFirebase.guardar(this.sesionMultijugador);
     }
 
     public int[] randomManzano() {
@@ -264,7 +316,6 @@ public class VistaJuego extends View {
 
                     rect = new Rect(this.arrayPasto.get(xy[0]).getX(), this.arrayPasto.get(xy[1]).getY(),
                             this.arrayPasto.get(xy[0]).getX() + tamanioMap, this.arrayPasto.get(xy[1]).getY() + tamanioMap);
-
                 }
 
             }
@@ -273,18 +324,19 @@ public class VistaJuego extends View {
         return xy;
     }
 
-    public void reset(){
-        for(int i = 0; i < height; i++){
-            for (int j = 0; j < weigth; j++){
-                ///Bitmap bitmapAuxiliar = (i + j) % 2 == 0 ? bitMapGrass : bitMapGrassAux;
-                Bitmap bitmapAuxiliar =  bitMapGrass ;
+    public void reset() {
+
+        for (int i = 0; i < height; i++) {
+            for (int j = 0; j < weigth; j++) {
+
+                Bitmap bitmapAuxiliar = bitMapGrass;
 
                 arrayPasto.add(new Pasto(bitmapAuxiliar,
                         j * bitmapAuxiliar.getWidth() + SCREEN_WIDTH / 2 - (weigth / 2) * bitmapAuxiliar.getWidth(),
                         i * bitmapAuxiliar.getHeight() + 50 * SCREEN_HEIGHT / 1920, bitmapAuxiliar.getWidth(), bitmapAuxiliar.getHeight()));
             }
         }
-        this.culebrita = new Culebrita(bitmapSnake,this.arrayPasto.get(126).getX(),this.arrayPasto.get(126).getY(), 4);
+        this.culebrita = new Culebrita(bitmapSnake, this.arrayPasto.get(126).getX(), this.arrayPasto.get(126).getY(), 4);
         int xy[] = this.randomManzano();
         this.manzana = new Manzana(bitmapApple, this.arrayPasto.get(xy[0]).getX(), this.arrayPasto.get(xy[1]).getY());
 
@@ -292,4 +344,11 @@ public class VistaJuego extends View {
         MainActivity.textViewPuntuacion.setText(String.valueOf(puntuacion));
     }
 
+    public Integer getPuntuacionOponente() {
+        return puntuacionOponente;
+    }
+
+    public void setPuntuacionOponente(Integer puntuacionOponente) {
+        this.puntuacionOponente = puntuacionOponente;
+    }
 }
