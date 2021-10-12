@@ -39,7 +39,7 @@ public class Online extends Observable {
                     multiplayer.setOponente(ultimoRegistro.child("oponente").getValue().toString());
                     multiplayer.setPuntuacion(Integer.parseInt(String.valueOf((long) ultimoRegistro.child("puntuacion").getValue())));
                     System.out.println(multiplayer);
-                    if (oponente != null && oponente.getNombreUser().equals(multiplayer.getNombreUser()) && !multiplayer.getOponente().equals("")) {
+                    if (oponente != null && oponente.getNombreUser().equals(multiplayer.getNombreUser()) && !multiplayer.getOponente().equals("") ) {
 
                         oponente.setOponente(multiplayer.getOponente());
                         oponente.setListo(multiplayer.isListo());
@@ -69,7 +69,7 @@ public class Online extends Observable {
     private void procesarMultijugador(SesionMultijugador multijugador) {
 
         if (
-                (!this.jugador.getNombreUser().equals("-1jugador") && !this.jugador.getEstado().equals("RESET") && !multijugador.getEstado().equals("RESET")) &&
+                (!this.jugador.getNombreUser().equals("-1jugador") && !this.jugador.getEstado().equals("RESET") && !multijugador.getEstado().equals("RESET") && !multijugador.getEstado().equals("EN PARTIDA")) &&
                         (this.jugador.getOponente() == null || this.jugador.getOponente().equals("")) &&
                         (multijugador.getOponente() == null || multijugador.getOponente().equals("") || multijugador.getOponente().equals(this.jugador.getNombreUser())) &&
                         !multijugador.getNombreUser().equals(this.jugador.getNombreUser())) {

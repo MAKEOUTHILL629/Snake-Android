@@ -133,6 +133,7 @@ public class VistaJuego extends View {
         this.sesionMultijugador.setNombreUser(nombre);
         this.sesionMultijugador.setListo(true);
         this.sesionMultijugador.setEstado("JUGANDO");
+        this.sesionMultijugador.setOponente("");
         ConexionFirebase.guardar(this.sesionMultijugador);
     }
 
@@ -235,8 +236,11 @@ public class VistaJuego extends View {
             if (cargandoSonido) {
                 int pistaId = this.soundPool.play(this.sonidoComer, (float) 0.5, (float) 0.5, 1, 0, 1f);
             }
+            this.sesionMultijugador.setEstado("EN PARTIDA");
+
             int xy[] = randomManzano();
             this.manzana.reset(this.arrayPasto.get(xy[0]).getX(), this.arrayPasto.get(xy[1]).getY());
+
             this.culebrita.aumentarTamanio();
             puntuacion++;
             this.sesionMultijugador.setPuntuacion(puntuacion);
@@ -261,19 +265,23 @@ public class VistaJuego extends View {
                 this.culebrita.aumentarTamanio();
             }
 
-            handler.postDelayed(runnable, 350 - (Online.oponente.getPuntuacion()));
+            handler.postDelayed(runnable, 700 - (Online.oponente.getPuntuacion() * 2));
         } else {
-            handler.postDelayed(runnable, 350);
+            handler.postDelayed(runnable, 700);
         }
 
     }
 
     public void juegoTerminado() {
 
-        if ((Online.oponente.getEstado().equals("PERDIO") || Online.oponente.getEstado().equals("RESET")) && Online.oponente.getPuntuacion() <= puntuacion) {
+        if ((Online.oponente.getEstado().equals("PERDIO") || Online.oponente.getEstado().equals("RESET")) && puntuacionOponente <= this.sesionMultijugador.getPuntuacion()) {
             MainActivity.textViewMultiplayer.setText("Le haz ganado a " + Online.oponente.getNombreUser() + " felicidades!!");
-        } else if (Online.oponente.getEstado().equals("JUGANDO")) {
+        } else if ((Online.oponente.getEstado().equals("EN PARTIDA") || Online.oponente.getEstado().equals("JUGANDO")) && puntuacionOponente >= sesionMultijugador.getPuntuacion()) {
             MainActivity.textViewMultiplayer.setText("Haz perdido, te ha ganado " + Online.oponente.getNombreUser());
+        } else if((Online.oponente.getEstado().equals("EN PARTIDA") || Online.oponente.getEstado().equals("JUGANDO")) && puntuacionOponente <= this.sesionMultijugador.getPuntuacion()){
+            MainActivity.textViewMultiplayer.setText("Aun " + Online.oponente.getNombreUser() + " esta jugando");
+        }else {
+            MainActivity.textViewMultiplayer.setText("Es un empate");
         }
         this.sesionMultijugador.setEstado("PERDIO");
         this.sesionMultijugador.setOponente("");
@@ -282,6 +290,7 @@ public class VistaJuego extends View {
         MainActivity.dialogPuntuacion.show();
         MainActivity.textViewDialogMejorPuntuacion.setText(mejorPuntuacion + "");
         MainActivity.textViewDialogPuntuacion.setText(puntuacion + "");
+        Online.oponente= new SesionMultijugador("");
         if (cargandoSonido) {
             int pistaId = this.soundPool.play(this.sonidoMorir, (float) 0.5, (float) 0.5, 1, 0, 1f);
         }

@@ -62,7 +62,8 @@
         android:layout_centerInParent="false"
         android:layout_weight="1"
         android:textAlignment="center"
-        android:textSize="18sp"
+        android:textColor="#37E8FF"
+        android:textSize="30sp"
         android:visibility="visible" />
 
 </RelativeLayout>
